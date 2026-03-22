@@ -93,8 +93,10 @@ claude -p "run /no-more-fomo and save the report" \
 
 ## More from freemty
 
+- [claude-code-best-practices](https://github.com/freemty/claude-code-best-practices) — Workflow advisor skill — recommends the right skill, agent, or workflow for any task
 - [labmate](https://github.com/freemty/labmate) — Research harness for Claude Code
-- [agent-reach](https://github.com/nicepkg/xreach) — Give your AI agent eyes to see the internet
+- [cc-research-playbook](https://github.com/freemty/cc-research-playbook) — AI Research with Claude Code — slides, demos, and reference materials
+- [ai-dotfiles](https://github.com/freemty/ai-dotfiles) — Sync AI CLI configs across machines with automatic API key redaction
 
 ## License
 
