@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html data-theme="light" data-lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>No More FOMO — Archive</title>
+  <style>
+    /* ===== Design Tokens ===== */
+    :root,
+    [data-theme="light"] {
+      --bg: #faf8f4;
+      --bg-secondary: #f2efe8;
+      --surface: #ffffff;
+      --surface-warm: #f9f6f0;
+      --border: #e0d5c0;
+      --text: #2c2416;
+      --text-secondary: #5a4d38;
+      --text-muted: #7a6a50;
+      --accent: #b07a22;
+      --accent-hover: #8d6118;
+      --green: #2d8a4e;
+      --yellow: #a67c00;
+      --red: #c0392b;
+      --radius: 6px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "SF Mono", Menlo, "Cascadia Code", monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg: #16191e;
+      --bg-secondary: #1a212d;
+      --surface: #212833;
+      --surface-warm: #282e3a;
+      --border: #343c4a;
+      --text: #f0f2f6;
+      --text-secondary: #b0bac8;
+      --text-muted: #6a7485;
+      --accent: #a5aecc;
+      --accent-hover: #cad0e4;
+      --green: #4ade80;
+      --yellow: #facc15;
+      --red: #f87171;
+      --radius: 10px;
+    }
+
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: var(--accent-hover);
+    }
+
+    /* ===== Header ===== */
+    .header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .title span {
+      color: var(--accent);
+    }
+
+    .meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      margin-top: 2px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ===== Theme & Lang Buttons ===== */
+    .theme-btn,
+    .lang-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text);
+      font-family: var(--font-sans);
+      transition: all 0.15s ease;
+    }
+
+    .theme-btn:hover,
+    .lang-btn:hover {
+      background: var(--bg-secondary);
+    }
+
+    /* ===== Content Layout ===== */
+    .content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 24px 40px;
+    }
+
+    /* ===== Quick Nav ===== */
+    .quick-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .quick-nav input {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: var(--radius);
+      padding: 6px 10px;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .quick-nav input:focus {
+      border-color: var(--accent);
+    }
+
+    .quick-nav button {
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 6px 14px;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .quick-nav button:hover {
+      background: var(--accent-hover);
+    }
+
+    /* ===== Date Grid ===== */
+    .date-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    /* ===== Date Card ===== */
+    .date-card {
+      display: block;
+      text-decoration: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      color: var(--text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .date-card:hover {
+      border-color: var(--accent);
+      color: var(--text);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .date-card.latest {
+      border-left: 3px solid var(--accent);
+    }
+
+    .date-card-date {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .date-card-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      margin-top: 3px;
+    }
+
+    .date-card-highlight {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.5;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .header {
+        padding: 12px 16px;
+      }
+
+      .header-top {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .content {
+        padding: 16px 16px 32px;
+      }
+
+      .date-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="title">No More <span>FOMO</span></div>
+        <div class="meta" data-zh="历史存档" data-en="Archive">历史存档</div>
+      </div>
+      <div class="controls">
+        <button class="theme-btn" onclick="toggleTheme()">🌓</button>
+        <button class="lang-btn" onclick="toggleLang()">中/EN</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="quick-nav">
+      <input type="date" id="dateInput">
+      <button onclick="goToDate()" data-zh="跳转" data-en="Go">跳转</button>
+    </div>
+    <div class="date-grid">
+      {{INDEX_ENTRIES}}
+    </div>
+  </div>
+
+  <script>
+    function goToDate() {
+      var val = document.getElementById('dateInput').value;
+      if (val) {
+        window.location.href = './' + val + '.html';
+      }
+    }
+
+    function toggleTheme() {
+      var html = document.documentElement;
+      var current = html.getAttribute('data-theme');
+      var next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('fomo-theme', next); } catch(e) {}
+    }
+
+    function toggleLang() {
+      var html = document.documentElement;
+      var current = html.getAttribute('data-lang');
+      var next = current === 'zh' ? 'en' : 'zh';
+      setLang(next);
+    }
+
+    function setLang(lang) {
+      document.documentElement.setAttribute('data-lang', lang);
+      var els = document.querySelectorAll('[data-zh][data-en]');
+      els.forEach(function(el) {
+        el.textContent = el.getAttribute('data-' + lang);
+      });
+      try { localStorage.setItem('fomo-lang', lang); } catch(e) {}
+    }
+
+    /* ===== Init ===== */
+    (function() {
+      var savedTheme, savedLang;
+      try {
+        savedTheme = localStorage.getItem('fomo-theme');
+        savedLang = localStorage.getItem('fomo-lang');
+      } catch(e) {}
+
+      if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+
+      var defaultLang = document.documentElement.getAttribute('data-lang') || 'zh';
+      var lang = savedLang || defaultLang;
+      setLang(lang);
+    })();
+  </script>
+</body>
+</html>
