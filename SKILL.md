@@ -325,9 +325,7 @@ curl -s "https://r.jina.ai/https://huggingface.co/MODEL_ID" | head -40
 
 **Blog posts** (from Lab Updates) — already fetched in Step 1, extract first paragraph as summary.
 
-**Podcast transcripts** — always fetch (not just with --transcripts). For each new episode:
-- Substack (Latent Space, Dwarkesh): `curl -s "https://r.jina.ai/POST_URL"` — extract key points from transcript
-- YouTube (No Priors, Training Data): `yt-dlp --write-auto-sub --sub-lang en --skip-download`
+**Podcast transcripts** — basic metadata extracted in Phase 1 (title, date, description, link). Full transcript processing (TLDR, chapters, speaker quotes) happens in Phase 2 below. Phase 1 writes a placeholder: `> ⏳ 深度摘要生成中...`
 
 **Parallelism:** Launch all enrichment fetches in parallel. Typically 5-15 URLs to enrich.
 
@@ -412,6 +410,18 @@ Total: N items
 
 Save to `~/no-more-fomo/YYYY-MM-DD.md` (create directory if needed).
 
+### 6.5. Save Phase 1 Digest & Extract Hot Topics
+
+Save the digest file immediately: `~/no-more-fomo/YYYY-MM-DD.md`
+
+Before proceeding to Phase 2, scan all digest entries and extract high-frequency entities:
+- Paper names mentioned by 2+ different sources
+- Model names mentioned by 2+ KOLs
+- Tool/repo names discussed in both Twitter and HN
+- Collect 3-5 hot topics (pass to Phase 2 Topic Search)
+
+Podcast entries at this point have the placeholder `⏳ 深度摘要生成中...` — these will be filled in Phase 2.
+
 ### 7. Relevance Check
 
 If user has CLAUDE.md or memory files with project keywords, tag matching items with `[RELEVANT]`.
@@ -423,6 +433,102 @@ Print concise summary:
 - Count per section
 - New podcast episodes (always mention)
 - Any `[RELEVANT]` items called out
+
+## Phase 2: Deep Layer (same session, after Phase 1)
+
+Phase 2 runs in the same Claude Code session immediately after Phase 1 saves the digest. Skip Phase 2 entirely if `--quick` flag is set.
+
+### Phase 2 Step A: Parallel Network Requests
+
+Launch ALL of the following as parallel Bash tool calls:
+
+**Podcast transcripts** (if `podcasts.depth` is `full`, which is the default):
+For each new episode found in Phase 1 (up to `max_episodes` per podcast, default 3):
+```bash
+# Check cache first
+ls ~/no-more-fomo/.cache/pods/**/summary.md 2>/dev/null | grep "EPISODE_SLUG"
+# If no cached summary, download transcript:
+bun ~/.claude/plugins/ljg-skills/.agents/skills/baoyu-youtube-transcript/scripts/main.ts VIDEO_URL \
+  --chapters --speakers --languages en,zh \
+  --output-dir ~/no-more-fomo/.cache/pods
+```
+
+**Topic Search** (if `topic_search.enabled`, default true):
+For each hot topic extracted in step 6.5 (max 5):
+```bash
+xreach search "TOPIC_NAME" --type top -n 15 --json
+```
+
+**Discovery** (if `discovery.enabled`, default true):
+For each topic in `papers.topics` config (max 3):
+```bash
+curl -s "https://s.jina.ai/latest%20TOPIC%20research%202026"
+```
+
+### Phase 2 Step B: AI Processing (Serial)
+
+**Podcast structured summaries** — for each episode with downloaded transcript:
+
+1. Read the generated `.md` file from `~/no-more-fomo/.cache/pods/{channel}/{title}/transcript.md`
+2. If `--speakers` was used, reference the speaker identification prompt at:
+   `~/.claude/plugins/ljg-skills/.agents/skills/baoyu-youtube-transcript/prompts/speaker-transcript.md`
+3. Identify speakers (host vs guest) from video metadata (title, channel, description)
+4. Generate structured summary in the configured `language` (default `zh`):
+
+```markdown
+**TLDR:** [3 sentences: core thesis, most surprising insight, practical takeaway]
+
+**章节:**
+- *[Chapter Title]* — [1-2 sentence summary of this chapter]
+- *[Chapter Title]* — [1-2 sentence summary]
+
+**关键引用:**
+> **[Speaker Name]:** "[Translated quote]" [HH:MM:SS]
+> **[Speaker Name]:** "[Translated quote]" [HH:MM:SS]
+```
+
+5. Cache the summary to `~/no-more-fomo/.cache/pods/{channel}/{title}/summary.md`
+
+Speaker names stay in original form (English). Technical terms stay in original form.
+Select 2-3 quotes that are most insightful or surprising.
+
+**Topic Search analysis** — for each xreach search result set:
+- Filter: `likeCount > 200`, exclude tweets from KOLs already in the digest (deduplicate by handle)
+- If >80% overlap with existing KOL tweets, skip this topic
+- Extract 2-3 external perspectives (disagreements, supplementary info, user feedback)
+- Format as a `> 社区热议:` blockquote appended to the matching digest entry
+
+**Discovery filtering** — for each s.jina.ai result set:
+- Deduplicate: remove any URL already in the digest
+- Filter: only keep technical content (papers, blog posts, conference pages — not news aggregators or SEO)
+- Keep max 3 per topic, format as:
+```markdown
+- **[类型]** [Title] — [1-2 sentence summary in configured language] | [link](URL)
+```
+Where 类型 is one of: 博客, 会议, 报告, 教程
+
+### Phase 2 Step C: Update Digest File
+
+Read `~/no-more-fomo/YYYY-MM-DD.md` and apply updates:
+
+1. **Podcasts:** Find each `⏳ 深度摘要生成中...` placeholder → replace with the structured summary (TLDR + chapters + quotes). If transcript failed, replace placeholder with basic description from RSS.
+
+2. **Topic Search:** Find matching entries by title → append `> 社区热议:` blockquote after the entry.
+
+3. **Discovery:** Find the `---` line immediately above the `Sources:` line → insert before it:
+```markdown
+## 发现 (Beyond arxiv/HN)
+来自全网搜索的技术内容，未被 KOL 推文或 HN 覆盖。
+
+[discovery entries here]
+```
+Only add this section if there are discovery results. If empty, skip.
+
+4. **Update Sources line** to include Phase 2 counts:
+```
+Sources: Tier1-KOLs(N) [Tier2-Companies(N)] Labs(N) Podcasts(N/深度N) HN(N) HF-Trending(N) arxiv(N) 社区补充(N) 发现(N)
+```
+`社区补充` and `发现` only appear if Phase 2 produced results for them.
 
 ## Arguments
 
