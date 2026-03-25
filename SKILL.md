@@ -9,7 +9,7 @@ description: >
 
 Daily AI intelligence briefing: Twitter KOLs + AI lab blogs + tech podcasts + HackerNews.
 
-**IMPORTANT: Digest output language follows the `language` config setting (default: `zh`).** When `zh`: summaries, section titles, and commentary in Chinese; speaker names and technical terms (model names, method names) stay in original form. When `en`: all output in English. Check `~/.no-more-fomo/config.yaml` for the `language` field; if absent, default to `zh`.
+**IMPORTANT: Primary digest is always in English.** After generating the English version, automatically translate to Chinese and save as `YYYY-MM-DD-zh.md` (skip with `--en-only`). Both versions get HTML rendering. Speaker names, model names, and technical terms stay in original form in both versions.
 
 ## When to Use
 
@@ -572,6 +572,29 @@ This automatically:
 
 **For `--quick` mode:** Run this step at the end of Phase 1. The render script works with whatever content is in the `.md` file at that point.
 
+### Phase 2 Step E: Generate Chinese Translation
+
+Skip this step if `--no-save` flag is set or if the digest is already in Chinese (`language: zh`).
+
+After the English digest is saved, translate it to Chinese:
+
+1. Read `~/no-more-fomo/YYYY-MM-DD.md` (English version, already in memory)
+2. Translate all content to Chinese:
+   - Section titles → use the zh titles from Categorize table
+   - Item descriptions and summaries → translate to Chinese
+   - Speaker names, model names, tool names, arxiv IDs → keep original
+   - Links → keep as-is
+   - Engagement metrics (likes, points) → keep as-is
+3. Write to `~/no-more-fomo/YYYY-MM-DD-zh.md`
+4. Run render script for the Chinese version:
+```bash
+bun /path/to/no-more-fomo/scripts/render.js ~/no-more-fomo/YYYY-MM-DD-zh.md
+```
+
+**Default behavior:** Always generate both English and Chinese versions. The English version is the primary (generated first), the Chinese version is a translation pass.
+
+**Skip translation with `--en-only` flag.**
+
 ## Arguments
 
 | Argument | Effect |
@@ -586,6 +609,7 @@ This automatically:
 | `--podcasts-only` | Only podcast feeds + Phase 2 podcast deep processing |
 | `--no-save` | Print results, don't save to file |
 | `--no-html` | Only generate .md, skip HTML output |
+| `--en-only` | Skip Chinese translation (only English digest) |
 | `--query "term"` | Add custom HN search query |
 
 **Flag combinations:**
