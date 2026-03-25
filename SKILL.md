@@ -9,7 +9,7 @@ description: >
 
 Daily AI intelligence briefing: Twitter KOLs + AI lab blogs + tech podcasts + HackerNews.
 
-**IMPORTANT: All digest output MUST be in English.** Summaries, descriptions, and commentary — everything in the saved markdown file and the summary shown to the user must be English. Even if source content is in Chinese or other languages, translate to English for the digest.
+**IMPORTANT: Digest output language follows the `language` config setting (default: `zh`).** When `zh`: summaries, section titles, and commentary in Chinese; speaker names and technical terms (model names, method names) stay in original form. When `en`: all output in English. Check `~/.no-more-fomo/config.yaml` for the `language` field; if absent, default to `zh`.
 
 ## When to Use
 
@@ -24,6 +24,9 @@ Daily AI intelligence briefing: Twitter KOLs + AI lab blogs + tech podcasts + Ha
 - **xreach** (`npm i -g xreach-cli`) — Twitter/X data. Requires auth: `xreach auth`
 - **curl** — RSS feeds and HN API (standard on all systems)
 - **Jina Reader** — free, no auth needed (`https://r.jina.ai/URL`)
+- **baoyu-youtube-transcript** (optional) — podcast transcript download with chapters and speaker detection. Path: `~/.claude/plugins/ljg-skills/.agents/skills/baoyu-youtube-transcript`. If not installed, falls back to yt-dlp.
+- **bun** (optional) — runtime for youtube-transcript scripts. Required only if youtube-transcript is installed.
+- **yt-dlp** — podcast YouTube subtitles (fallback if youtube-transcript unavailable)
 
 ## Sources
 
