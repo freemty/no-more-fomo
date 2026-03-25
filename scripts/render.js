@@ -23,18 +23,22 @@ function esc(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function linkify(text) {
-  // Convert [label](url) → <a href="url" target="_blank" rel="noopener">label</a>
-  return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g,
-    (_, label, url) => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>`);
-}
-
-function bold(text) {
-  return text.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-}
-
 function inlineFmt(text) {
-  return bold(linkify(text));
+  // Order matters: linkify raw text first (before escaping), then escape the rest, then bold
+  // 1. Extract links before escaping (URLs contain & etc.)
+  const links = [];
+  const withPlaceholders = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => {
+    const idx = links.length;
+    links.push(`<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>`);
+    return `\x00LINK${idx}\x00`;
+  });
+  // 2. Escape remaining text
+  let result = esc(withPlaceholders);
+  // 3. Restore links
+  result = result.replace(/\x00LINK(\d+)\x00/g, (_, idx) => links[idx]);
+  // 4. Bold
+  result = result.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  return result;
 }
 
 // Section title zh/en mapping
@@ -168,7 +172,7 @@ function renderItem(item) {
     // Split by | for meta parts
     const parts = rest.split('|').map(p => p.trim());
     const desc = parts[0] || '';
-    html += `<div class="item-desc">${inlineFmt(esc(desc))}</div>`;
+    html += `<div class="item-desc">${inlineFmt(desc)}</div>`;
     if (parts.length > 1) {
       const metaParts = parts.slice(1).map(p => {
         // @handle → badge
@@ -176,7 +180,7 @@ function renderItem(item) {
         // HN Npts → green badge
         if (p.match(/HN \d+/)) return `<span class="badge badge-green">${esc(p)}</span>`;
         // [link](url) → link
-        if (p.match(/\[.*\]\(.*\)/)) return `<span class="item-links">${linkify(p)}</span>`;
+        if (p.match(/\[.*\]\(.*\)/)) return `<span class="item-links">${inlineFmt(p)}</span>`;
         return esc(p);
       });
       html += `<div class="item-meta">${metaParts.join(' ')}</div>`;
@@ -186,15 +190,15 @@ function renderItem(item) {
     const simpleMatch = raw.match(/^\*\*([^*]+)\*\*\s*(.*)/);
     if (simpleMatch) {
       html += `<div class="item-title">${esc(simpleMatch[1])}</div>`;
-      if (simpleMatch[2]) html += `<div class="item-desc">${inlineFmt(esc(simpleMatch[2]))}</div>`;
+      if (simpleMatch[2]) html += `<div class="item-desc">${inlineFmt(simpleMatch[2])}</div>`;
     } else {
-      html += `<div class="item-desc">${inlineFmt(esc(raw))}</div>`;
+      html += `<div class="item-desc">${inlineFmt(raw)}</div>`;
     }
   }
 
   // Blockquote (podcast summary or HN context)
   if (item.quote) {
-    html += `<div class="podcast-summary"><div class="tldr">${inlineFmt(esc(item.quote))}</div></div>`;
+    html += `<div class="podcast-summary"><div class="tldr">${inlineFmt(item.quote)}</div></div>`;
   }
 
   html += `</div>`;
@@ -205,7 +209,7 @@ function renderHighlights(section) {
   let html = `<div class="highlights-title" data-zh="今日要点" data-en="Today's Highlights">今日要点</div>`;
   html += `<ol>`;
   for (const item of section.items) {
-    html += `<li>${inlineFmt(esc(item.raw))}</li>`;
+    html += `<li>${inlineFmt(item.raw)}</li>`;
   }
   html += `</ol>`;
   return html;
