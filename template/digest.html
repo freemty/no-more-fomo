@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html data-theme="light" data-lang="{{DIGEST_LANG}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>No More FOMO — {{DIGEST_DATE}}</title>
+  <style>
+    /* ===== Design Tokens ===== */
+    :root,
+    [data-theme="light"] {
+      --bg: #faf8f4;
+      --bg-secondary: #f2efe8;
+      --surface: #ffffff;
+      --surface-warm: #f9f6f0;
+      --border: #e0d5c0;
+      --text: #2c2416;
+      --text-secondary: #5a4d38;
+      --text-muted: #7a6a50;
+      --accent: #b07a22;
+      --accent-hover: #8d6118;
+      --green: #2d8a4e;
+      --yellow: #a67c00;
+      --red: #c0392b;
+      --radius: 6px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "SF Mono", Menlo, "Cascadia Code", monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg: #16191e;
+      --bg-secondary: #1a212d;
+      --surface: #212833;
+      --surface-warm: #282e3a;
+      --border: #343c4a;
+      --text: #f0f2f6;
+      --text-secondary: #b0bac8;
+      --text-muted: #6a7485;
+      --accent: #a5aecc;
+      --accent-hover: #cad0e4;
+      --green: #4ade80;
+      --yellow: #facc15;
+      --red: #f87171;
+      --radius: 10px;
+    }
+
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: var(--accent-hover);
+    }
+
+    /* ===== Header ===== */
+    .header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .title span {
+      color: var(--accent);
+    }
+
+    .meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      margin-top: 2px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ===== View Switcher ===== */
+    .view-switcher {
+      display: flex;
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .view-btn {
+      background: none;
+      border: none;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-family: var(--font-sans);
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: calc(var(--radius) - 2px);
+      transition: all 0.15s ease;
+    }
+
+    .view-btn.active {
+      background: var(--surface);
+      color: var(--accent);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      font-weight: 600;
+    }
+
+    .view-btn:hover:not(.active) {
+      color: var(--text-secondary);
+    }
+
+    /* ===== Theme & Lang Buttons ===== */
+    .theme-btn,
+    .lang-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text);
+      font-family: var(--font-sans);
+      transition: all 0.15s ease;
+    }
+
+    .theme-btn:hover,
+    .lang-btn:hover {
+      background: var(--bg-secondary);
+    }
+
+    /* ===== Highlights ===== */
+    .highlights {
+      background: var(--surface-warm);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 16px 24px;
+      padding: 14px 18px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .highlights-title {
+      color: var(--accent);
+      text-transform: uppercase;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    /* ===== Content Layout ===== */
+    .content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px 24px;
+    }
+
+    .content-wrap {
+      display: block;
+    }
+
+    .main-content {
+      min-width: 0;
+    }
+
+    .sections-container {
+      display: block;
+    }
+
+    /* ===== Sidebar Nav ===== */
+    .sidebar-nav {
+      display: none;
+    }
+
+    .sidebar-nav a {
+      display: block;
+      padding: 4px 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-radius: calc(var(--radius) - 2px);
+      transition: all 0.15s ease;
+    }
+
+    .sidebar-nav a:hover {
+      background: var(--bg-secondary);
+      color: var(--accent);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ===== Section ===== */
+    .section {
+      margin-bottom: 20px;
+    }
+
+    .section-header {
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--accent);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-count {
+      background: var(--bg-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 8px;
+      border-radius: 99px;
+      color: var(--text-muted);
+    }
+
+    /* ===== Item ===== */
+    .item {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .item:last-child {
+      border-bottom: none;
+    }
+
+    .item-title {
+      font-weight: 700;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .item-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      line-height: 1.5;
+    }
+
+    .item-meta {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .item-links a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 11px;
+    }
+
+    .item-links a:hover {
+      color: var(--accent-hover);
+    }
+
+    /* ===== Item Empty ===== */
+    .item-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 12px;
+      padding: 8px 0;
+    }
+
+    /* ===== Badge ===== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      padding: 1px 8px;
+      border-radius: 99px;
+      font-weight: 500;
+    }
+
+    .badge-source {
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      color: var(--accent);
+    }
+
+    .badge-green {
+      background: color-mix(in srgb, var(--green) 12%, transparent);
+      color: var(--green);
+    }
+
+    /* ===== Podcast ===== */
+    .podcast-summary {
+      background: var(--surface-warm);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      margin-top: 6px;
+    }
+
+    .podcast-summary.loading {
+      opacity: 0.6;
+    }
+
+    .tldr {
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .chapters {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .quote {
+      font-style: italic;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-left: 2px solid var(--border);
+      padding-left: 8px;
+      margin-top: 6px;
+    }
+
+    /* ===== Community Discussion ===== */
+    .community-discussion {
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* ===== Footer ===== */
+    .footer {
+      border-top: 2px solid var(--border);
+      padding: 12px 24px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ===== View: Newspaper (default) ===== */
+    .view-newspaper .sidebar-nav {
+      display: none;
+    }
+
+    /* ===== View: Sidebar ===== */
+    .view-sidebar .content-wrap {
+      display: flex;
+      gap: 20px;
+    }
+
+    .view-sidebar .sidebar-nav {
+      display: block;
+      width: 160px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 16px;
+      align-self: flex-start;
+    }
+
+    /* ===== View: Grid ===== */
+    .view-grid .sidebar-nav {
+      display: none;
+    }
+
+    .view-grid .sections-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .view-grid .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 0;
+    }
+
+    .view-grid .section.wide {
+      grid-column: 1 / -1;
+    }
+
+    .view-grid .item-desc {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .header {
+        padding: 12px 16px;
+      }
+
+      .header-top {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .highlights {
+        margin: 12px 16px;
+      }
+
+      .content {
+        padding: 0 16px 16px;
+      }
+
+      .view-grid .sections-container {
+        grid-template-columns: 1fr;
+      }
+
+      .view-sidebar .content-wrap {
+        flex-direction: column;
+      }
+
+      .view-sidebar .sidebar-nav {
+        width: 100%;
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="title">No More <span>FOMO</span></div>
+        <div class="meta">{{DIGEST_DATE}} | {{DIGEST_META}}</div>
+      </div>
+      <div class="controls">
+        <div class="view-switcher">
+          <button class="view-btn active" data-zh="报纸" data-en="Newspaper" onclick="setView('newspaper')">报纸</button>
+          <button class="view-btn" data-zh="侧栏" data-en="Sidebar" onclick="setView('sidebar')">侧栏</button>
+          <button class="view-btn" data-zh="网格" data-en="Grid" onclick="setView('grid')">网格</button>
+        </div>
+        <button class="theme-btn" onclick="toggleTheme()">🌓</button>
+        <button class="lang-btn" onclick="toggleLang()">中/EN</button>
+      </div>
+    </div>
+  </div>
+  <div class="highlights">{{DIGEST_HIGHLIGHTS}}</div>
+  <div class="content view-newspaper" id="mainContent">
+    <div class="content-wrap">
+      <nav class="sidebar-nav">{{DIGEST_SIDEBAR_NAV}}</nav>
+      <div class="main-content">
+        <div class="sections-container">{{DIGEST_SECTIONS}}</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">{{DIGEST_FOOTER}}</div>
+  <script>
+    function setView(view) {
+      var el = document.getElementById('mainContent');
+      el.className = 'content view-' + view;
+      var btns = document.querySelectorAll('.view-btn');
+      btns.forEach(function(btn) {
+        var btnView = btn.getAttribute('onclick').match(/'(\w+)'/)[1];
+        if (btnView === view) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      try { localStorage.setItem('fomo-view', view); } catch(e) {}
+    }
+
+    function toggleTheme() {
+      var html = document.documentElement;
+      var current = html.getAttribute('data-theme');
+      var next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('fomo-theme', next); } catch(e) {}
+    }
+
+    function toggleLang() {
+      var html = document.documentElement;
+      var current = html.getAttribute('data-lang');
+      var next = current === 'zh' ? 'en' : 'zh';
+      setLang(next);
+    }
+
+    function setLang(lang) {
+      document.documentElement.setAttribute('data-lang', lang);
+      var els = document.querySelectorAll('[data-zh][data-en]');
+      els.forEach(function(el) {
+        el.textContent = el.getAttribute('data-' + lang);
+      });
+      try { localStorage.setItem('fomo-lang', lang); } catch(e) {}
+    }
+
+    /* ===== Init ===== */
+    (function() {
+      var savedView, savedTheme, savedLang;
+      try {
+        savedView = localStorage.getItem('fomo-view');
+        savedTheme = localStorage.getItem('fomo-theme');
+        savedLang = localStorage.getItem('fomo-lang');
+      } catch(e) {}
+
+      if (savedView) {
+        setView(savedView);
+      }
+
+      if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+
+      var defaultLang = document.documentElement.getAttribute('data-lang') || 'zh';
+      var lang = savedLang || defaultLang;
+      setLang(lang);
+    })();
+  </script>
+</body>
+</html>
