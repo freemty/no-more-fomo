@@ -28,6 +28,7 @@ git clone https://github.com/freemty/no-more-fomo.git ~/.claude/skills/no-more-f
 /no-more-fomo --transcripts      # (deprecated — Phase 2 默认启用)
 /no-more-fomo @someone           # 临时加 Twitter 账号
 /no-more-fomo --quick           # 快速简报 — 跳过深度处理
+/no-more-fomo --no-html          # 只生成 markdown，跳过 HTML
 ```
 
 ## 数据源
@@ -48,6 +49,7 @@ git clone https://github.com/freemty/no-more-fomo.git ~/.claude/skills/no-more-f
 - 播客附带 **结构化摘要：TLDR + 章节要点 + 说话者标注的关键引用**
 - HN 帖子附带 **社区关注原因的上下文解释**
 - 所有条目都有 **真实链接** — arxiv、GitHub、HuggingFace，不是 t.co
+- 每份 digest 同时输出 **HTML 可视化版本**，支持三种布局、暗色主题、日期导航
 
 ## 前置依赖
 

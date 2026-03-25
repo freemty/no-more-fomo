@@ -26,6 +26,7 @@ Most "AI news" tools give you a list of links. You still have to click each one,
 - Podcasts come with **structured summaries: TLDR, chapter breakdown, and speaker-attributed quotes** extracted from transcripts
 - HN threads come with **context on why the community cares**
 - Everything has **real links** — arxiv, GitHub, HuggingFace, not t.co
+- Every digest also outputs a **styled HTML version** with three-view layout, dark mode, and date navigation
 
 ## Sources
 
@@ -48,6 +49,7 @@ Most "AI news" tools give you a list of links. You still have to click each one,
 /no-more-fomo @someone           # Add any Twitter handle
 /no-more-fomo --hn-only          # Just HackerNews
 /no-more-fomo --quick           # Quick digest — skip deep processing
+/no-more-fomo --no-html          # Markdown only, skip HTML output
 /no-more-fomo --podcasts-only    # Just podcast feeds
 ```
 
@@ -148,6 +150,7 @@ Runs on cloud infra — no local machine needed.
 4. **Enrich** — fetches arxiv abstracts, GitHub descriptions, podcast transcripts
 5. **Categorize** — Papers, Models, Tools, Agents, Lab Updates, Podcasts, HN, Industry
 6. **Output** — structured markdown with summaries, links, and engagement metrics
+7. **Render** — generates styled HTML from template with three-view layout (newspaper/sidebar/grid)
 
 ## More from freemty
 
