@@ -41,18 +41,28 @@ function inlineFmt(text) {
   return result;
 }
 
-// Section title zh/en mapping
-const sectionMap = {
-  'Top Highlights': { zh: '今日要点', en: 'Top Highlights', id: 'highlights' },
-  'Models & Releases': { zh: '模型与发布', en: 'Models & Releases', id: 'models' },
-  'Tools & Demos': { zh: '工具与演示', en: 'Tools & Demos', id: 'tools' },
-  'AI Agents': { zh: 'AI Agents', en: 'AI Agents', id: 'agents' },
-  'Lab Updates': { zh: '实验室动态', en: 'Lab Updates', id: 'labs' },
-  'Podcasts (Last 7 Days)': { zh: '播客', en: 'Podcasts', id: 'podcasts' },
-  'HN Threads': { zh: 'HN 讨论', en: 'HN Threads', id: 'hn' },
-  'Industry': { zh: '行业动态', en: 'Industry', id: 'industry' },
-  'HF Trending Papers': { zh: 'HF 热门论文', en: 'HF Trending Papers', id: 'hf-papers' },
-};
+// Section title zh/en mapping — shared refs to avoid copy-paste drift
+const SECTIONS = [
+  { zh: '今日要点', en: 'Top Highlights', id: 'highlights' },
+  { zh: '模型与发布', en: 'Models & Releases', id: 'models' },
+  { zh: '工具与演示', en: 'Tools & Demos', id: 'tools' },
+  { zh: 'AI Agents', en: 'AI Agents', id: 'agents' },
+  { zh: '实验室动态', en: 'Lab Updates', id: 'labs' },
+  { zh: '播客', en: 'Podcasts', id: 'podcasts' },
+  { zh: 'HN 讨论', en: 'HN Threads', id: 'hn' },
+  { zh: '行业动态', en: 'Industry', id: 'industry' },
+  { zh: 'HF 热门论文', en: 'HF Trending Papers', id: 'hf-papers' },
+];
+const sectionMap = Object.fromEntries(
+  SECTIONS.flatMap(s => {
+    const entries = [[s.en, s]];
+    if (s.zh !== s.en) entries.push([s.zh, s]);
+    return entries;
+  })
+);
+// Also match common alternate headings
+sectionMap['Podcasts (Last 7 Days)'] = sectionMap['Podcasts'];
+sectionMap['播客 (近 7 天)'] = sectionMap['播客'];
 
 function matchSection(heading) {
   // Exact match first
@@ -249,12 +259,12 @@ const dateMatch = path.basename(mdPath).match(/(\d{4}-\d{2}-\d{2})/);
 const date = dateMatch ? dateMatch[1] : 'unknown';
 
 const sections = parseMd(md);
-const highlightsSection = sections.find(s => s.heading === 'Top Highlights');
-const contentSections = sections.filter(s => s.heading !== 'Top Highlights');
+const highlightsSection = sections.find(s => s.meta.id === 'highlights');
+const contentSections = sections.filter(s => s.meta.id !== 'highlights');
 
-// Extract footer from raw md
-const footerMatch = md.match(/^(Sources:.+)$/m);
-const totalMatch = md.match(/^(Total:.+)$/m);
+// Extract footer from raw md (support both EN and ZH)
+const footerMatch = md.match(/^((?:Sources|来源):.+)$/m);
+const totalMatch = md.match(/^((?:Total|总计):.+)$/m);
 const footerText = [footerMatch?.[1], totalMatch?.[1]].filter(Boolean).join(' | ');
 
 // Meta for header: just total items count, keep it short

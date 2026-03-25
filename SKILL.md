@@ -222,39 +222,48 @@ language: zh                    # zh | en — output language (default: zh)
 
 Launch ALL fetches in parallel. Use separate Bash tool calls. **First read `~/.no-more-fomo/config.yaml` if it exists, then merge with defaults to determine the final source list.**
 
-**CRITICAL — Filter at fetch time to minimize context usage.** Pipe xreach output through jq to keep only relevant tweets. This reduces ~30KB/account to ~2KB/account:
+**CRITICAL — Filter at fetch time to minimize context usage.** Pipe xreach output through jq to keep only relevant tweets. This reduces ~30KB/account to ~2KB/account.
+
+**xreach JSON structure (IMPORTANT — verified):**
+- Top-level keys: `items`, `cursor`, `hasMore` (NOT `data.items`)
+- Each item: `{id, text, createdAt, likeCount, retweetCount, isQuote, isRetweet, isReply, user, media, ...}`
+- **NO `entities.urls` field** — URLs appear as t.co links within `text`
+- `id` — tweet ID string, used to construct tweet URL: `https://x.com/HANDLE/status/ID`
+- `createdAt` — format: `"Tue Mar 24 16:56:24 +0000 2026"`
 
 ```bash
-# Template for each account (adjust -n and likeCount threshold per account):
-xreach tweets @HANDLE --json -n N | jq '[.items[] | select(.isRetweet==false or .isQuote==true) | {text,createdAt,likeCount,retweetCount,isQuote,urls: [.entities.urls[]?.expanded_url // empty]}]'
+# Template for each account — extracts id for tweet links:
+xreach tweets @HANDLE --json -n N | jq '[.items[] | select(.isRetweet==false or .isQuote==true) | {id,text: .text[:300],createdAt,likeCount,retweetCount,isQuote}]'
 ```
 
-The `urls` field extracts all expanded URLs from each tweet (arxiv, github, huggingface, etc.), eliminating t.co links. This is the **primary source of links** for the digest — always include these URLs in the output.
+**Constructing tweet links:** For every tweet used in the digest, construct the link as `[tweet](https://x.com/HANDLE/status/ID)`. This is the **primary reference link** for Twitter-sourced items.
 
-**Twitter — Tier 1 (always, one call per account). Batch accounts together (3-4 per Bash call) to reduce tool call overhead:**
+**Twitter — Tier 1 (always, batch accounts to reduce tool calls):**
 ```bash
 # Batch 1: High volume
-xreach tweets @_akhaliq --json -n 50 | jq '[.items[] | select(.isRetweet==false or .isQuote==true) | {text,createdAt,likeCount,retweetCount,isQuote,urls:[.entities.urls[]?.expanded_url // empty]}]'
-xreach tweets @dotey --json -n 30 | jq '[.items[] | select(.isRetweet==false or .isQuote==true) | {text,createdAt,likeCount,retweetCount,isQuote,urls:[.entities.urls[]?.expanded_url // empty]}]'
+xreach tweets @_akhaliq --json -n 50 | jq '[.items[] | select(.isRetweet==false or .isQuote==true) | {id,text: .text[:300],createdAt,likeCount,retweetCount,isQuote}]'
+xreach tweets @dotey --json -n 30 | jq '[.items[] | select(.isRetweet==false or .isQuote==true) | {id,text: .text[:300],createdAt,likeCount,retweetCount,isQuote}]'
 ```
 ```bash
-# Batch 2: KOLs (chain with &&, each piped through jq)
-for h in karpathy bcherny oran_ge trq212 swyx emollick; do xreach tweets @$h --json -n 20 | jq -c "[.items[] | select(.isRetweet==false or .isQuote==true) | {text,createdAt,likeCount,urls:[.entities.urls[]?.expanded_url // empty]}]"; echo "---$h---"; done
+# Batch 2: KOLs
+for h in karpathy bcherny oran_ge trq212 swyx emollick; do echo "---$h---"; xreach tweets @$h --json -n 20 | jq -c "[.items[] | select(.isRetweet==false or .isQuote==true) | {id,text: .text[:300],createdAt,likeCount,isQuote}]"; done
 ```
 ```bash
 # Batch 3: More KOLs
-for h in drjimfan simonw hardmaru ylecun; do xreach tweets @$h --json -n 20 | jq -c "[.items[] | select(.isRetweet==false or .isQuote==true) | {text,createdAt,likeCount,urls:[.entities.urls[]?.expanded_url // empty]}]"; echo "---$h---"; done
+for h in drjimfan simonw hardmaru ylecun; do echo "---$h---"; xreach tweets @$h --json -n 20 | jq -c "[.items[] | select(.isRetweet==false or .isQuote==true) | {id,text: .text[:300],createdAt,likeCount,isQuote}]"; done
 ```
 ```bash
-# Batch 4: Company accounts
-for h in cursor_ai AnthropicAI OpenAI GoogleDeepMind; do xreach tweets @$h --json -n 15 | jq -c "[.items[] | select(.isRetweet==false or .isQuote==true) | {text,createdAt,likeCount,urls:[.entities.urls[]?.expanded_url // empty]}]"; echo "---$h---"; done
+# Batch 4: Company accounts (may hit rate limits — retry after 10s if needed)
+for h in cursor_ai AnthropicAI OpenAI GoogleDeepMind; do echo "---$h---"; xreach tweets @$h --json -n 15 | jq -c "[.items[] | select(.isRetweet==false or .isQuote==true) | {id,text: .text[:300],createdAt,likeCount,isQuote}]"; done
 ```
 
 **Twitter — Tier 2 (only with `--full` flag):**
 ```bash
-for h in xai WindsurfAI cognition replit huggingface llama_index; do xreach tweets @$h --json -n 15 | jq -c "[.items[] | select(.isRetweet==false or .isQuote==true) | {text,createdAt,likeCount,urls:[.entities.urls[]?.expanded_url // empty]}]"; echo "---$h---"; done
+for h in xai WindsurfAI cognition replit huggingface llama_index; do echo "---$h---"; xreach tweets @$h --json -n 15 | jq -c "[.items[] | select(.isRetweet==false or .isQuote==true) | {id,text: .text[:300],createdAt,likeCount,isQuote}]"; done
 # + any extra @handles from arguments, same jq filter
 ```
+
+**Rate limiting:** xreach may return `"Rate limit exceeded"` instead of JSON after ~15 accounts in quick succession. If this happens, wait 10 seconds and retry. Company accounts (Tier 1 Batch 4) are most likely to be affected.
 
 **AI Lab Blogs (one call per source):**
 ```bash
@@ -296,15 +305,17 @@ curl -s "https://hn.algolia.com/api/v1/search?query=LLM+OR+GPT+OR+Claude+OR+Gemi
 
 ### 2. Parse & Extract
 
-**CRITICAL: xreach JSON structure.** Tweets are in `data.items[]`. Each item has:
-- `text` — tweet text (may contain t.co links)
-- `createdAt` — date string like "Fri Mar 20 18:31:49 +0000 2026"
-- `likeCount`, `retweetCount`, `viewCount`
-- `isRetweet`, `isQuote`, `isReply`
-- `entities.urls[]` — **MUST use `expanded_url` field** to get real URLs (arxiv, github, etc.)
-- `media[]` — images/videos
+**xreach JSON structure** is documented above in Step 1. Key reminders:
+- Items are at `.items[]` (NOT `.data.items[]`)
+- There is NO `entities.urls` field — URLs are t.co links inside `text`
+- Use `id` field to construct tweet links: `https://x.com/HANDLE/status/ID`
 
-**URL expansion is mandatory.** Never output t.co links. Always extract `entities.urls[].expanded_url`. If entities is empty, resolve t.co links via `curl -sI URL | grep -i location`.
+**URL extraction from tweet text:** Tweets contain t.co shortened URLs. To get real URLs:
+1. Regex extract `https://t.co/\w+` from `text`
+2. Resolve via `curl -sI URL | grep -i location`
+3. Or: if the tweet mentions a known paper/repo, search for the URL directly
+
+**Every digest item MUST have at least one clickable link.** For Twitter-sourced items without embedded URLs, use the tweet link `[tweet](https://x.com/HANDLE/status/ID)` as the minimum reference.
 
 ### 3. Filter
 
@@ -570,6 +581,13 @@ This automatically:
 3. Replaces `{{PLACEHOLDER}}` markers → writes `YYYY-MM-DD.html`
 4. Scans all `.html` files → regenerates `index.html` with date cards
 
+**HTML features:**
+- Three view layouts: newspaper (default), sidebar, grid — CSS-only toggle
+- Light/dark theme with system preference detection
+- `中/EN` button navigates between `YYYY-MM-DD.html` ↔ `YYYY-MM-DD-zh.html` (page redirect, not just UI label swap)
+- `← 归档` back link to `index.html`
+- render.js supports both English AND Chinese section headings (`Top Highlights`/`今日要点`, `Sources:`/`来源:`, `Total:`/`总计:` etc.)
+
 **For `--quick` mode:** Run this step at the end of Phase 1. The render script works with whatever content is in the `.md` file at that point.
 
 ### Phase 2 Step E: Generate Chinese Translation
@@ -631,10 +649,14 @@ bun /path/to/no-more-fomo/scripts/render.js ~/no-more-fomo/YYYY-MM-DD-zh.md
 |---------|-----|
 | Including all retweets | Only quote tweets with commentary |
 | Sequential fetching | ALL fetches must be parallel |
-| Missing URLs | Always extract arxiv/GitHub/HF links |
+| Using `.data.items[]` for xreach | Correct path is `.items[]` — there is no `.data` wrapper |
+| Using `.entities.urls` for xreach | This field does not exist. Construct tweet links from `.id`: `https://x.com/HANDLE/status/ID` |
+| Items without reference links | **Every item MUST have at least one clickable `[link](URL)`** — arxiv, github, blog, HF, HN, or tweet link. Items with only @handle and no URL are NOT acceptable. For Twitter-only items, `[tweet](https://x.com/HANDLE/status/ID)` is the minimum. |
+| Chinese digest missing highlights | render.js matches both `Top Highlights` and `今日要点`. Also matches `Sources:/来源:` and `Total:/总计:` for footer. |
 | Ignoring dedup | Same URL from Twitter + HN = one entry |
 | Stale blog/podcast posts | Blogs: 7 days, Podcasts: 7 days |
 | Empty section hidden | Show "No new episodes this week" |
+| xreach rate limiting | Company accounts often hit rate limits. Retry after 10s. Don't batch all 16 accounts in parallel — use 4 batches of 4. |
 
 ## Scheduling
 
