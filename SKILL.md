@@ -468,10 +468,8 @@ Launch ALL of the following as parallel Bash tool calls:
 
 **Podcast transcripts** (if `podcasts.depth` is `full`, which is the default):
 For each new episode found in Phase 1 (up to `max_episodes` per podcast, default 3):
+For each episode, check cache first: if `~/no-more-fomo/.cache/pods/{channel}/{episode}/summary.md` exists, skip download. Otherwise:
 ```bash
-# Check cache first
-ls ~/no-more-fomo/.cache/pods/**/summary.md 2>/dev/null | grep "EPISODE_SLUG"
-# If no cached summary, download transcript:
 bun ~/.claude/plugins/ljg-skills/.agents/skills/baoyu-youtube-transcript/scripts/main.ts VIDEO_URL \
   --chapters --speakers --languages en,zh \
   --output-dir ~/no-more-fomo/.cache/pods

@@ -25,7 +25,7 @@ git clone https://github.com/freemty/no-more-fomo.git ~/.claude/skills/no-more-f
 ```bash
 /no-more-fomo                    # 每日简报 — 所有默认源
 /no-more-fomo --full             # 加上公司/产品账号
-/no-more-fomo --transcripts      # 播客 transcript 摘要
+/no-more-fomo --transcripts      # (deprecated — Phase 2 默认启用)
 /no-more-fomo @someone           # 临时加 Twitter 账号
 /no-more-fomo --quick           # 快速简报 — 跳过深度处理
 ```

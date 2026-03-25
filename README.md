@@ -44,7 +44,7 @@ Most "AI news" tools give you a list of links. You still have to click each one,
 ```bash
 /no-more-fomo                    # Daily digest — all default sources
 /no-more-fomo --full             # Also include company/product accounts
-/no-more-fomo --transcripts      # Add podcast transcript summaries
+/no-more-fomo --transcripts      # (deprecated — Phase 2 does this automatically)
 /no-more-fomo @someone           # Add any Twitter handle
 /no-more-fomo --hn-only          # Just HackerNews
 /no-more-fomo --quick           # Quick digest — skip deep processing
