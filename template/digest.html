@@ -215,21 +215,26 @@
       margin: 0 auto;
     }
 
-    .date-nav-btn {
+    .date-nav-btn,
+    .date-chip {
       font-size: 11px;
       font-family: var(--font-mono);
       color: var(--text-muted);
       text-decoration: none;
       padding: 4px 10px;
-      border-radius: var(--radius-sm);
       transition: all 0.15s ease;
       white-space: nowrap;
-      flex-shrink: 0;
     }
 
-    .date-nav-btn:hover:not(.disabled) {
+    .date-nav-btn:hover:not(.disabled),
+    .date-chip:hover {
       background: var(--accent-subtle);
       color: var(--accent);
+    }
+
+    .date-nav-btn {
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
     }
 
     .date-nav-btn.disabled {
@@ -250,19 +255,7 @@
     .date-chips::-webkit-scrollbar { display: none; }
 
     .date-chip {
-      font-size: 11px;
-      font-family: var(--font-mono);
-      color: var(--text-muted);
-      text-decoration: none;
-      padding: 4px 10px;
       border-radius: 99px;
-      transition: all 0.15s ease;
-      white-space: nowrap;
-    }
-
-    .date-chip:hover {
-      background: var(--accent-subtle);
-      color: var(--accent);
     }
 
     .date-chip.active {

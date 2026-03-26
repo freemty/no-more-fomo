@@ -283,17 +283,17 @@ const metaText = totalItems;
 
 // Build date nav HTML
 function buildDateNav() {
-  const zhSuffix = isZh ? '-zh' : '';
+  const dateUrl = d => `./${d}${isZh ? '-zh' : ''}.html`;
   const prevLink = prevDate
-    ? `<a href="./${prevDate}${zhSuffix}.html" class="date-nav-btn">← ${prevDate}</a>`
+    ? `<a href="${dateUrl(prevDate)}" class="date-nav-btn">← ${prevDate}</a>`
     : `<span class="date-nav-btn disabled">← </span>`;
   const nextLink = nextDate
-    ? `<a href="./${nextDate}${zhSuffix}.html" class="date-nav-btn">${nextDate} →</a>`
+    ? `<a href="${dateUrl(nextDate)}" class="date-nav-btn">${nextDate} →</a>`
     : `<span class="date-nav-btn disabled"> →</span>`;
 
   const dateBtns = allDates.map(d => {
     const cls = d === date ? 'date-chip active' : 'date-chip';
-    return `<a href="./${d}${zhSuffix}.html" class="${cls}">${d.slice(5)}</a>`;
+    return `<a href="${dateUrl(d)}" class="${cls}">${d.slice(5)}</a>`; // MM-DD
   }).join('');
 
   return `${prevLink}<div class="date-chips">${dateBtns}</div>${nextLink}`;
@@ -316,13 +316,9 @@ console.log(`Written: ${htmlPath}`);
 // --- Update index.html ---
 
 if (fs.existsSync(indexTemplatePath)) {
-  const files = fs.readdirSync(outputDir)
-    .filter(f => /^\d{4}-\d{2}-\d{2}\.html$/.test(f))
-    .sort()
-    .reverse();
+  const files = [...allDates].reverse();
 
-  const entries = files.map((f, i) => {
-    const d = f.replace('.html', '');
+  const entries = files.map((d, i) => {
     const latestClass = i === 0 ? ' latest' : '';
     // Try to read first highlight from corresponding .md
     let highlight = '';
@@ -335,7 +331,7 @@ if (fs.existsSync(indexTemplatePath)) {
       const srcMatch = content.match(/^Total:\s*(.+)$/m);
       if (srcMatch) itemCount = srcMatch[1];
     }
-    return `<a href="./${f}" class="date-card${latestClass}">
+    return `<a href="./${d}.html" class="date-card${latestClass}">
       <div class="date-card-date">${d}</div>
       <div class="date-card-meta">${esc(itemCount)}</div>
       <div class="date-card-highlight">${esc(highlight)}</div>
